@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QGro
 import os
 import numpy as np
 import Q1_functions as q1_funcs
-import q1
+import q1, q2, q3, q4
 
 
 class MainWindow(QMainWindow):
@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
         self.obj_point[:, :2] = np.mgrid[0 : self.width, 0 : self.height].T.reshape(
             -1, 2
         )
+        self.matrix = None   # ret, intrinsic, distort, r_vecs, t_vecs
 
         self.initUI()
 
@@ -33,7 +34,7 @@ class MainWindow(QMainWindow):
         loadImageLayout.setSpacing(10)
         
         loadFolderButton = QPushButton("Load folder")
-        loadFolderButton.clicked.connect(q1_funcs.load_folder)
+        loadFolderButton.clicked.connect(lambda: q1.load_folder(self))
         loadFolderButton.setFixedWidth(120)
 
         loadImageLButton = QPushButton("Load Image_L")
@@ -55,12 +56,12 @@ class MainWindow(QMainWindow):
 
         #1.1
         findCornersButton = QPushButton("1.1 Find corners")
-        findCornersButton.clicked.connect(q1_funcs.detect_corners_from_folder)  # 呼叫 Q1_functions 中的 detect_corners_from_folder 函式
+        findCornersButton.clicked.connect(lambda: q1.findCorners(self))
         findCornersButton.setFixedWidth(120)
         
         #1.2
         findIntrinsicButton = QPushButton("1.2 Find intrinsic")
-        findIntrinsicButton.clicked.connect(q1_funcs.find_intrinsic_matrix)
+        findIntrinsicButton.clicked.connect(lambda: q1.findInstrinsic(self))
         findIntrinsicButton.setFixedWidth(120)
         
         # 1.3 Find extrinsic with SpinBox
@@ -71,8 +72,7 @@ class MainWindow(QMainWindow):
         extrinsicSpinBox.setFixedWidth(40)
         
         findExtrinsicButton = QPushButton("1.3 Find extrinsic")
-        # createUI.py 中的按鈕事件
-        findExtrinsicButton.clicked.connect(lambda: q1_funcs.find_extrinsic_matrix(extrinsicSpinBox.value() - 1))
+        findExtrinsicButton.clicked.connect(lambda: q1.findExtrinsic(self, extrinsicSpinBox.value() - 1))
 
         findExtrinsicButton.setFixedWidth(120)       
         extrinsicLayout.addWidget(extrinsicSpinBox)
@@ -81,13 +81,12 @@ class MainWindow(QMainWindow):
 
         #1.4
         findDistortionButton = QPushButton("1.4 Find distortion")
-        findDistortionButton.clicked.connect(q1_funcs.find_distortion_matrix)
+        findDistortionButton.clicked.connect(lambda: q1.findDistorsion(self))
         findDistortionButton.setFixedWidth(120)
         
         #1.5
         showResultButton = QPushButton("1.5 Show result")
-        # createUI.py 中的按鈕事件
-        showResultButton.clicked.connect(q1_funcs.show_undistorted_result)
+        showResultButton.clicked.connect(lambda: q1.showResultClick(self))
         showResultButton.setFixedWidth(120)
 
         calibrationLayout.addWidget(findCornersButton)
@@ -99,6 +98,7 @@ class MainWindow(QMainWindow):
         calibrationGroup.setFixedHeight(300)
 
         # 中間 Augmented Reality 區域
+        # 2.1
         arGroup = QGroupBox("2. Augmented Reality")
         arLayout = QVBoxLayout()
         arLayout.setSpacing(10)
@@ -108,11 +108,12 @@ class MainWindow(QMainWindow):
         
         showWordsOnBoardButton = QPushButton("2.1 show words on board")
         showWordsOnBoardButton.setFixedWidth(120)
-        showWordsOnBoardButton.clicked.connect(lambda: q1_funcs.show_words_on_board("K"))  # 以 "K" 為例
+        showWordsOnBoardButton.clicked.connect(lambda: q2.horizontallyShow(self,  textInput.toPlainText()))  # 以 "K" 為例
 
-        
+        # 2.2
         showWordsVerticalButton = QPushButton("2.2 show words vertical")
         showWordsVerticalButton.setFixedWidth(120)
+        showWordsVerticalButton.clicked.connect(lambda: q2.verticallyShow(self,  textInput.toPlainText()))
 
         arLayout.addWidget(textInput)
         arLayout.addWidget(showWordsOnBoardButton)
@@ -120,14 +121,17 @@ class MainWindow(QMainWindow):
         arGroup.setLayout(arLayout)
         arGroup.setFixedHeight(300)
 
+
         # 右側 Stereo Disparity Map 區域
+        #3.1
         stereoGroup = QGroupBox("3. Stereo disparity map")
         stereoLayout = QVBoxLayout()
         stereoLayout.setSpacing(10)
         
         stereoButton = QPushButton("3.1 stereo disparity map")
         stereoButton.setFixedWidth(120)
-        
+        stereoButton.clicked.connect(lambda: q3.disparityMap(self))
+
         stereoLayout.addWidget(stereoButton)
         stereoGroup.setLayout(stereoLayout)
         stereoGroup.setFixedHeight(300)
@@ -143,11 +147,15 @@ class MainWindow(QMainWindow):
         loadImage2Button = QPushButton("Load Image2")
         loadImage2Button.setFixedWidth(120)
         
+        # 4.1
         keypointsButton = QPushButton("4.1 Keypoints")
         keypointsButton.setFixedWidth(120)
+        keypointsButton.clicked.connect(lambda: q4.createKeyPoint(self))
         
+        # 4.2
         matchedKeypointsButton = QPushButton("4.2 Matched Keypoints")
         matchedKeypointsButton.setFixedWidth(120)
+        matchedKeypointsButton.clicked.connect(lambda: q4.matchedKeyPoint(self))
 
         siftLayout.addWidget(loadImage1Button)
         siftLayout.addWidget(loadImage2Button)
@@ -183,17 +191,6 @@ class MainWindow(QMainWindow):
 
 
 
-    def find_intrinsic_matrix(objectPoints, imagePoints, img_shape):
-        pass
-
-    def find_extrinsic_matrix(rvecs, tvecs):
-        pass
-
-    def find_distortion_matrix(dist):
-        pass
-
-    def show_undistorted_result(img, mtx, dist):
-        pass
 
 
 if __name__ == '__main__':
